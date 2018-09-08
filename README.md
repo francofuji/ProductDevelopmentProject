@@ -67,3 +67,7 @@ If you'd like to do very well on this project, we'll hand you the categories we 
 6. Test coverage is complete and meaningful
 7. Deployment is fully scripted
 8. Communication is positive and respectful
+
+## Email
+
+pd-hires@britecore.com
