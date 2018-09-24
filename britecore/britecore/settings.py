@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+
     'eav',
-    'insurances'
+    'rest_framework',
+    
+    'insurances',
+    'frontend'
 ]
 
 SITE_ID = 1

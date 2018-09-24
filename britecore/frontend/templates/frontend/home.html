@@ -1,0 +1,308 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+ <meta charset="utf-8">
+ <title>Product Development Hiring Project</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="description" content="A simple app made with the vue js and django for Product Development Hiring Project">
+ <meta name="keywords" content="vuejs, django, restapi, django-eav">
+
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+ 
+ <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+ <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+ <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+
+ <style>
+     .container .row { padding: 10px;}
+ </style>
+</head>
+<body>
+    <div id="starting">
+        <div class="container">
+            <div class="row">
+                <div class="col-12"><h2>Product Development Hiring Project</h2></div>
+                <div class="col-12"><h5>By Francisco Pérez Ferrer (francofuji@gmail.com)</h5></div>
+            </div>
+            <div class="row">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="risks-tab" data-toggle="pill" href="#risks-container" role="tab" aria-controls="pills-home" aria-selected="true">Risks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="riskstypes-tab" data-toggle="pill" href="#riskstypes-container" role="tab" aria-controls="pills-profile" aria-selected="false">Risks types</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="attributes-tab" data-toggle="pill" href="#attributes-container" role="tab" aria-controls="pills-contact" aria-selected="false">Attributes</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="row">
+                <div class="tab-content" style="width: 90%;">
+                    <div class="tab-pane fade show active" id="risks-container" role="tabpanel" aria-labelledby="pills-home-tab">
+                            <button class="btn btn-small btn-success btn-sm" data-toggle="modal" data-target="#addRiskModal">ADD RISK</button>
+                            <table class="table" style="margin-top:15px;">
+                                <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Attributes</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="risk in risks">
+                                    <th scope="row">${risk.id}</th>
+                                    <td>${risk.name}</td>
+                                    <td>
+                                        <p v-for="attr_value in risk.attribute_values">
+                                                ${attr_value["name"]} (${attr_value["value"]})
+                                        </p>
+                                    </td>
+                                    <td>
+                                    <button class="btn btn-danger btn-sm" v-on:click="deleteRisk(risk.id)">Delete</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+    
+                            <div class="modal fade" id="addRiskModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLongTitle">ADD RISK</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    </div>
+                                    <form v-on:submit.prevent="addRisk()">
+                                        <div class="modal-body">
+                                        <div class="form-group">
+                                        <input 
+                                            type="hidden" 
+                                            name="csrfmiddlewaretoken" 
+                                            value="{{ csrf_token }}" />
+                                        <label for="attribute_name">Risk</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="risk_name"
+                                            placeholder="Enter Risk"
+                                            v-model="newRisk.name"
+                                            required="required" >
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="attribute_name">Risk Type</label>
+                                            <select
+                                                class="form-control"
+                                                id="risk_type"
+                                                v-model="newRisk.type"
+                                                required="required" 
+                                                v-on:change="changeRiskType">
+                                                <option v-for="risk_type in risks_types" v-bind:value="risk_type.id">
+                                                    ${risk_type.name}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div id="risk_attributes_container">
+                                            <risk_attribute_component 
+                                                v-for="risk_type_attribute in risk_type_attributes"
+                                                v-bind:risk_attribute="risk_type_attribute"
+                                                v-bind:key="risk_type_attribute.id">
+                                            </risk_attribute_component>
+                                        </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                </div>
+                                <div class="loading" v-if="loading===true">Loading&#8230;</div>          
+                            </div>
+                            <div class="loading" v-if="loading===true">Loading&#8230;</div>
+                    </div>
+                    <div class="tab-pane fade" id="riskstypes-container" role="tabpanel" aria-labelledby="pills-profile-tab">
+                        <button class="btn btn-small btn-success btn-sm" data-toggle="modal" data-target="#addRiskTypeModal">ADD RISK TYPE</button>
+                        <table class="table" style="margin-top:15px;">
+                            <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Attributes</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="risk_type in risks_types">
+                                <th scope="row">${risk_type.id}</th>
+                                <td>${risk_type.name}</td>
+                                <td>
+                                    <p v-for="attr in risk_type.attributes_details">
+                                        ${attr.name} (${attr.datatype})
+                                    </p>
+                                </td>
+                                <td>
+                                <button class="btn btn-danger btn-sm" v-on:click="deleteRiskType(risk_type.id)">Delete</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="modal fade" id="addRiskTypeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">ADD RISK TYPE</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                                <form v-on:submit.prevent="addRiskType()">
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                        <input 
+                                            type="hidden" 
+                                            name="csrfmiddlewaretoken" 
+                                            value="{{ csrf_token }}" />
+                                        <label for="risk_type_name">Risk Type Name</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="risk_type_name"
+                                            placeholder="Enter Risk Type Name"
+                                            v-model="newRiskType.name"
+                                            required="required" >
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="risk_type_attributes">Attributes</label>
+                                            <select multiple
+                                                type="select"
+                                                class="form-control"
+                                                id="risk_type_attributes"
+                                                placeholder="Select attributes"
+                                                v-model="newRiskType.attributes"
+                                                required="required" >
+                                                <option v-for="attribute in attributes" v-bind:value="attribute.id">
+                                                    ${attribute["name"]} (${attribute["datatype"]})
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                            </div>
+                            <div class="loading" v-if="loading===true">Loading&#8230;</div>          
+                        </div>
+                        <div class="loading" v-if="loading===true">Loading&#8230;</div>
+                    </div>
+                    <div class="tab-pane fade" id="attributes-container" role="tabpanel" aria-labelledby="pills-contact-tab">
+                        <button class="btn btn-small btn-success btn-sm" data-toggle="modal" data-target="#addAttributeModal">ADD ATTRIBUTE</button>
+                        <table class="table" style="margin-top:15px;">
+                            <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Data Type</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="attribute in attributes">
+                                <th scope="row">${attribute.id}</th>
+                                <td>${attribute.name}</td>
+                                <td>${attribute.datatype}</td>
+                                <td>
+                                <button class="btn btn-danger btn-sm" v-on:click="deleteAttribute(attribute.id)">Delete</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="modal fade" id="addAttributeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">ADD ATTRIBUTE</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                                <form v-on:submit.prevent="addAttribute()">
+                                    <div class="modal-body">
+                                    <div class="form-group">
+                                    <input 
+                                        type="hidden" 
+                                        name="csrfmiddlewaretoken" 
+                                        value="{{ csrf_token }}" />
+                                    <label for="attribute_name">Attribute Name</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="attribute_name"
+                                        placeholder="Enter Attribute Name"
+                                        v-model="newAttribute.name"
+                                        required="required" >
+                                    </div>
+                                    <div class="form-group">
+                                    <label for="attribute_type">Attribute Type</label>
+                                    <select 
+                                        class="form-control"
+                                        id="attribute_type"
+                                        placeholder="Select Attribute Type"
+                                        v-model="newAttribute.datatype"
+                                        required="required">
+                                        <option value="text">Text</option>
+                                        <option value="float">Float</option>
+                                        <option value="int">Integer</option>
+                                        <option value="date">Date</option>
+                                        <option value="enum">Enum</option>
+                                    </select>
+                                    </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                            </div>
+                            <div class="loading" v-if="loading===true">Loading&#8230;</div>          
+                        </div>
+                        <div class="loading" v-if="loading===true">Loading&#8230;</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+    </div>
+
+    <script type="text/javascript">
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+        var csrftoken = readCookie('csrftoken');
+    </script>
+
+    <script src="{% static 'frontend/vuejs_app/risks.js' %}"></script>
+    <script src="{% static 'frontend/vuejs_app/risks_types.js' %}"></script>
+    <script src="{% static 'frontend/vuejs_app/eav_attributes.js' %}"></script>
+    <script src="{% static 'frontend/vuejs_app/components.js' %}"></script>
+</body>
+</html>
