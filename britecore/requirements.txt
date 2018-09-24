@@ -1,5 +1,5 @@
 Django==1.11.15
--e git://github.com/francofuji/django-eav.git@41e99fa366a8712d2efd7006a23bd3b1fdac082a#egg=django_eav
+-e git://github.com/francofuji/django-eav.git
 djangorestframework==3.8.2
 pytz==2018.5
 selenium==3.14.0
