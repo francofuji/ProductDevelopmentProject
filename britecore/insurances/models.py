@@ -16,4 +16,7 @@ class Risk(models.Model):
     name = models.CharField(max_length=50)
     type = models.ForeignKey(RiskType, related_name="risks")
 
+    def __str__(self):
+        return "{0} - ({1})".format(self.name, self.type)    
+
 eav.register(Risk)
